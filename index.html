@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script
+  src="https://code.jquery.com/jquery-3.2.1.js"
+  integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+  crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzicato/0.6.2/Pizzicato.js"></script>
+
+    <!-- <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+     -->
+    <title>Document</title>
+</head>
+<style>
+    audio{
+        width:100%;
+        display: none;
+    }
+    input{
+        width:100%;
+    }
+    table {
+
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+<body>   
+    <audio id="audio-player" controls>
+            <source src="" type="audio/mpeg">
+            Your browser does not support the audio element.
+    </audio>
+<br>
+    <p>time</p>
+    <input type="range" min="0" max="10" value="5" id="revTime">
+    <p>decay</p>
+    <input type="range" min="0" max="10" value="5" id="revDecay">
+    <p>mix</p>
+    <input type="range" min="0" max="1" value="1" id="revMix">
+    
+    <br><br>
+    <table>
+        <tr>
+            <th>Song</th>
+            <th>Artist</th>
+        </tr>
+        <tr>
+            <td class="songTitle"></td>
+            <td class="artistTitle"></td>
+        </tr>
+    </table>
+
+
+
+
+
+      <script>
+      var audioPlayer = $('#audio-player')[0];
+
+      audioPlayer.playbackRate = .5;
+      
+      
+
+      $.get("/getTracks", function(data){
+        tracks = JSON.parse(data);
+        //startPlayer(randNumber,tracks);
+        let playlist = randomPlaylist(tracks);
+        createPlaylist(playlist);
+        startPlayer(playlist);
+
+        });
+       
+    
+
+    function startPlayer(tracks){
+       audioPlayer.src = './audio/'+tracks[0].srcpath;
+       audioPlayer.playbackRate = .5;
+       var sound = new Pizzicato.Sound({ 
+            source: 'file',
+            options: { path: './audio/'+tracks[0].srcpath }
+        }, function() {
+            console.log('sound file loaded!');
+            var reverb = new Pizzicato.Effects.Reverb({
+                time: 10,
+                decay: 10,
+                reverse: true,
+                mix: 1
+            });
+            var off = new Pizzicato.Effects.Reverb({
+                time: 0,
+                decay: 0,
+                reverse: false,
+                mix: .5
+            });
+
+            sound.addEffect(reverb);
+            sound.play();
+            $('#revMix').change(()=>{
+                sound.removeEffect(reverb);
+                sound.addEffect(off);
+            });
+
+
+        });
+        
+
+    }
+
+    function createPlaylist(tracks) {
+        console.dir(tracks);
+        tracks.forEach(element => {
+            if(element){
+                if(element.title){
+
+                    $('table').append(
+                        `<tr>
+                            <td class="songTitle">`+element.title+`</td>
+                            <td class="artistTitle">`+element.artist+`</td>
+                        </tr>`
+                    );
+                    
+                } else {
+
+                    $('table').append(
+                        `<tr>
+                            <td class="songTitle">MISSING TITLE</td>
+                            <td class="artistTitle">MISSING ARTIST</td>
+                        </tr>`
+                    );
+
+                }
+
+            } else {
+                $('table').append(
+                    `<tr>
+                        <td class="songTitle">MISSING TITLE</td>
+                        <td class="artistTitle">MISSING ARTIST</td>
+                    </tr>`
+                );
+
+            }
+           
+        });
+
+    }
+
+    function getRandomTrack(tracks) {
+       return Math.floor(Math.random() * tracks.length);
+    }
+      
+      audioPlayer.onended = function() {
+        // audioPlayer.src = tr
+    };
+    //startPlayer(0);
+
+    function randomPlaylist(tracks){
+        var arr = [];
+        var playlist = [];
+        while(arr.length < tracks.length){
+            var randomnumber = Math.floor(Math.random()* tracks.length) + 1;
+            if(arr.indexOf(randomnumber) > -1) continue;
+            arr[arr.length] = randomnumber;
+            playlist.push(tracks[randomnumber]);
+        }
+        return(playlist);
+    }
+
+      </script>
+     
+</body>
+</html>
