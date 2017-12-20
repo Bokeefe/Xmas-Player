@@ -46,7 +46,7 @@
             <source src="" type="audio/mpeg">
             Your browser does not support the audio element.
     </audio>
-<br>
+<br><br>
     <p>time</p>
     <input type="range" min="0" max="10" value="5" id="revTime">
     <p>decay</p>
@@ -54,7 +54,7 @@
     <p>mix</p>
     <input type="range" min="0" max="1" value="1" id="revMix">
     
-    <br><br>
+    <br><br><br><br>
     <table>
         <tr>
             <th>Song</th>
@@ -65,65 +65,53 @@
             <td class="artistTitle"></td>
         </tr>
     </table>
+    <script>
 
+    $.get("/getTracks", function(data){
+    tracks = JSON.parse(data);
+    //startPlayer(randNumber,tracks);
+    let playlist = randomPlaylist(tracks);
+    createPlaylist(playlist,startPlayer);
+    // startPlayer(playlist);
 
+    });
 
+    $('#revMix').change(()=>{
+        updateEffects();
+    });
 
-
-      <script>
-      var audioPlayer = $('#audio-player')[0];
-
-      audioPlayer.playbackRate = .5;
-      
-      
-
-      $.get("/getTracks", function(data){
-        tracks = JSON.parse(data);
-        //startPlayer(randNumber,tracks);
-        let playlist = randomPlaylist(tracks);
-        createPlaylist(playlist);
-        startPlayer(playlist);
-
-        });
-       
+    function updateEffects(){
+        sound.removeEffect(reverb);
+        // sound.effects[0].options.mix = mix;
+        // sound.effects[0].options.time = time;
+        // sound.effects[0].options.reverse = reverse;
+        // sound.effects[0].options.decay = decay;
+        console.log(sound.effects[0].options);
+        sound.play();
+        
+    }
     
-
     function startPlayer(tracks){
-       audioPlayer.src = './audio/'+tracks[0].srcpath;
-       audioPlayer.playbackRate = .5;
-       var sound = new Pizzicato.Sound({ 
+        var sound = new Pizzicato.Sound({ 
             source: 'file',
-            options: { path: './audio/'+tracks[0].srcpath }
+            options: { path: '/audio/'+tracks[0].srcpath }
         }, function() {
-            console.log('sound file loaded!');
             var reverb = new Pizzicato.Effects.Reverb({
                 time: 10,
                 decay: 10,
                 reverse: true,
                 mix: 1
             });
-            var off = new Pizzicato.Effects.Reverb({
-                time: 0,
-                decay: 0,
-                reverse: false,
-                mix: .5
-            });
 
-            sound.addEffect(reverb);
             sound.play();
-            $('#revMix').change(()=>{
-                sound.removeEffect(reverb);
-                sound.addEffect(off);
-            });
-
+            sound.sourceNode.playbackRate.value = .5;
+            console.log(sound.sourceNode.playbackRate.value);
 
         });
-        
 
     }
 
     function createPlaylist(tracks) {
-        console.dir(tracks);
         tracks.forEach(element => {
             if(element){
                 if(element.title){
@@ -157,17 +145,13 @@
             }
            
         });
+        startPlayer(tracks);
 
     }
 
     function getRandomTrack(tracks) {
        return Math.floor(Math.random() * tracks.length);
     }
-      
-      audioPlayer.onended = function() {
-        // audioPlayer.src = tr
-    };
-    //startPlayer(0);
 
     function randomPlaylist(tracks){
         var arr = [];
